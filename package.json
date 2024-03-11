@@ -11,6 +11,7 @@
   "dependencies": {
     "@prisma/client": "^5.10.2",
     "@sentry/nextjs": "^7.106.0",
+    "antd": "^5.15.2",
     "formik": "^2.4.5",
     "next": "14.1.2",
     "react": "^18",
