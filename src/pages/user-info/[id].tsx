@@ -1,32 +1,12 @@
 import { useFormik } from "formik";
-import React from "react";
-import styled from "styled-components";
+import React, { useState } from "react";
 import { mutate } from "swr";
 import * as Sentry from "@sentry/nextjs";
-const Wrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 50px;
-  input {
-    padding: 8px 10px;
-    width: 20%;
-  }
-  .button {
-    margin-left: -215px;
-    button {
-      padding: 10px 30px;
-      cursor: pointer;
-      background-color: #cdf1ee;
-      color: #000;
-      border: 1px solid #000;
-      border-radius: 5px;
-    }
-  }
-`;
+import { UserForm } from "@/components/UserAddEditComponent";
+
 const EditUsers = ({ id }: any) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const formik: any = useFormik({
     initialValues: {
       email: "",
@@ -40,6 +20,7 @@ const EditUsers = ({ id }: any) => {
   });
 
   const updateUsers = async (data: any) => {
+    setLoading(true);
     const scope = Sentry.getCurrentHub().getScope();
     const transaction = Sentry.startTransaction({
       name: "Updating Users",
@@ -68,6 +49,8 @@ const EditUsers = ({ id }: any) => {
     });
 
     if (res.ok) {
+      setIsModalOpen(false);
+      setLoading(false);
       const mutatingCacheSpan = transaction.startChild({
         op: "cache",
         description: "Mutating SWR cache",
@@ -88,6 +71,7 @@ const EditUsers = ({ id }: any) => {
 
       return data;
     } else {
+      setLoading(false);
       const errorSpan = transaction.startChild({
         op: "mark",
         description: `Failed to update users. Reason: ${res.statusText}`,
@@ -99,46 +83,18 @@ const EditUsers = ({ id }: any) => {
     }
   };
   return (
-    <Wrapper>
-      <input
-        type={"email"}
-        placeholder="Enter Email"
-        name="email"
-        value={formik?.email}
-        onChange={formik.handleChange}
-      />
-      <input
-        type={"password"}
-        placeholder="Enter Password"
-        name="password"
-        value={formik?.password}
-        onChange={formik.handleChange}
-      />
-      <input
-        type={"text"}
-        placeholder="Enter First Name"
-        name="firstName"
-        value={formik?.firstName}
-        onChange={formik.handleChange}
-      />
-      <input
-        type={"text"}
-        placeholder="Enter Last Name"
-        name="lastName"
-        value={formik?.lastName}
-        onChange={formik.handleChange}
-      />
-      <div className="button">
-        <button onClick={() => formik.handleSubmit()}>Save</button>
-      </div>
-    </Wrapper>
+    <UserForm
+      id={id}
+      formik={formik}
+      isModalOpen={isModalOpen}
+      setIsModalOpen={setIsModalOpen}
+    />
   );
 };
 
 export default EditUsers;
 export async function getServerSideProps({ query }: any) {
   const { id } = query;
-
   return {
     props: {
       id,

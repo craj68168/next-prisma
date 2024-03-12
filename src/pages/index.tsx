@@ -1,43 +1,81 @@
 import Head from "next/head";
-import { Button, Modal } from "antd";
-import { useState } from "react";
-import styled from "styled-components";
 import { useFormik } from "formik";
 import { mutate } from "swr";
-const ButtonWrapper = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 30px;
-  button {
-    padding: 10px 30px;
-    height: 100%;
+import * as Yup from "yup";
+import { useEffect, useState } from "react";
+import { UserForm } from "@/components/UserAddEditComponent";
+import { notification } from "antd";
+import styled from "styled-components";
+import Link from "next/link";
+const TableWrapper = styled.div`
+  table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 50%;
+    margin: 20px;
   }
-`;
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  input {
-    padding: 15px 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+
+  td,
+  th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+  .table-row {
+  }
+  .edit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .table-heads {
+    align-items: row;
   }
 `;
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [isCreated, setIsCreated] = useState(false);
+  const validation = Yup.object().shape({
+    email: Yup.string().required("Required"),
+    password: Yup.string().required("Required"),
+    firstName: Yup.string().required("Required"),
+    lastName: Yup.string().required("Required"),
+  });
+  const initialValues = {
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+  };
   const formik: any = useFormik({
-    initialValues: {
-      email: "",
-      password: "",
-      firstName: "",
-      lastName: "",
-    },
-    onSubmit: (value) => {
+    initialValues: initialValues,
+    validationSchema: validation,
+    onSubmit: (value, { resetForm }) => {
       handleSubmit(value);
+      resetForm();
     },
   });
+
+  const getAllUsers = async () => {
+    const res = await fetch("/api/users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (res.ok) {
+      mutate("/api/users");
+      const data = await res.json();
+      setAllUsers(data);
+      setIsCreated(false);
+    } else {
+      notification.error({
+        message: `Failed to create flashcard. Reason: ${res.statusText}`,
+      });
+    }
+  };
 
   const handleSubmit = async (value: any) => {
     const res = await fetch("/api/users", {
@@ -50,23 +88,22 @@ export default function Home() {
 
     if (res.ok) {
       mutate("/api/users");
+      setIsModalOpen(false);
+      setIsCreated(true);
+      notification.success({
+        message: `${res.statusText}`,
+      });
       return await res.json();
     } else {
-      alert(`Failed to create flashcard. Reason: ${res.statusText}`);
+      notification.error({
+        message: `Failed to create flashcard. Reason: ${res.statusText}`,
+      });
     }
   };
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    getAllUsers();
+  }, [isCreated]);
 
-  const handleOk = () => {
-    setIsModalOpen(false);
-    formik.handleSubmit();
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
   return (
     <>
       <Head>
@@ -75,48 +112,38 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <ButtonWrapper>
-        <Button type={"primary"} onClick={() => showModal()}>
-          Create
-        </Button>
-      </ButtonWrapper>
-      <Modal
-        title="Create Users"
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <Wrapper>
-          <input
-            type={"email"}
-            placeholder="Enter Email"
-            name="email"
-            value={formik?.email}
-            onChange={formik.handleChange}
-          />
-          <input
-            type={"password"}
-            placeholder="Enter Password"
-            name="password"
-            value={formik?.password}
-            onChange={formik.handleChange}
-          />
-          <input
-            type={"text"}
-            placeholder="Enter First Name"
-            name="firstName"
-            value={formik?.firstName}
-            onChange={formik.handleChange}
-          />
-          <input
-            type={"text"}
-            placeholder="Enter Last Name"
-            name="lastName"
-            value={formik?.lastName}
-            onChange={formik.handleChange}
-          />
-        </Wrapper>
-      </Modal>
+
+      <UserForm
+        formik={formik}
+        setIsModalOpen={setIsModalOpen}
+        isModalOpen={isModalOpen}
+      />
+      <TableWrapper>
+        <table>
+          <tr className="table-row">
+            <th>ID</th>
+            <th>Email</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th className="edit">Action</th>
+          </tr>
+          {allUsers?.length
+            ? allUsers?.map((user: any) => {
+                return (
+                  <tr className="table-row">
+                    <td>{user?.id}</td>
+                    <td>{user?.email}</td>
+                    <td>{user?.firstName}</td>
+                    <td>{user?.lastName}</td>
+                    <td className="edit">
+                      <Link href={`/user-info/${user?.id}`}>Edit</Link>
+                    </td>
+                  </tr>
+                );
+              })
+            : []}
+        </table>
+      </TableWrapper>
     </>
   );
 }
