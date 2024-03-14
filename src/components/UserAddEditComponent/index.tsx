@@ -3,16 +3,18 @@ import { Button, Modal } from "antd";
 import { ButtonWrapper, Wrapper } from "./UserAddEdit.style";
 
 interface IProps {
-  id?: string | number;
+  id?: string | number | null;
   formik?: any;
   isModalOpen?: boolean;
   setIsModalOpen?: any;
+  setId?: any;
 }
 const UserForm: React.FC<IProps> = ({
   id,
   formik,
   isModalOpen,
   setIsModalOpen,
+  setId,
 }) => {
   const showModal = () => {
     setIsModalOpen(true);
@@ -24,6 +26,8 @@ const UserForm: React.FC<IProps> = ({
 
   const handleCancel = () => {
     setIsModalOpen(false);
+    setId(null);
+    formik.resetForm();
   };
   return (
     <>
@@ -43,7 +47,7 @@ const UserForm: React.FC<IProps> = ({
             type={"email"}
             placeholder="Enter Email"
             name="email"
-            value={formik?.email}
+            value={formik?.values?.email}
             onChange={formik.handleChange}
           />
           <div style={{ color: "red" }}>
@@ -51,13 +55,17 @@ const UserForm: React.FC<IProps> = ({
               ? formik.errors?.email
               : null}
           </div>
-          <input
-            type={"password"}
-            placeholder="Enter Password"
-            name="password"
-            value={formik?.password}
-            onChange={formik.handleChange}
-          />
+          {!id ? (
+            <input
+              type={"password"}
+              placeholder="Enter Password"
+              name="password"
+              value={formik?.values.password}
+              onChange={formik.handleChange}
+            />
+          ) : (
+            ""
+          )}
           <div style={{ color: "red" }}>
             {formik?.touched?.password && formik.errors?.password
               ? formik.errors?.password
@@ -67,7 +75,7 @@ const UserForm: React.FC<IProps> = ({
             type={"text"}
             placeholder="Enter First Name"
             name="firstName"
-            value={formik?.firstName}
+            value={formik?.values?.firstName}
             onChange={formik.handleChange}
           />
           <div style={{ color: "red" }}>
@@ -79,7 +87,7 @@ const UserForm: React.FC<IProps> = ({
             type={"text"}
             placeholder="Enter Last Name"
             name="lastName"
-            value={formik?.lastName}
+            value={formik?.values?.lastName}
             onChange={formik.handleChange}
           />
           <div style={{ color: "red" }}>
