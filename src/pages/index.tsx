@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useFormik } from "formik";
 import { useState } from "react";
 import { UserForm } from "@/components/UserAddEditComponent";
-import { Button, Table, notification } from "antd";
+import { Button, Popconfirm, Table, notification } from "antd";
 import styled from "styled-components";
 import { useMutation, useQuery } from "react-query";
 import {
@@ -11,7 +11,12 @@ import {
   updateUsers,
   userValidation,
 } from "@/utils/constants";
+import { deleteUser } from "../../prisma/helpers";
 const TableWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -71,7 +76,7 @@ const Home: React.FC = () => {
       setId(null);
       refetch();
       notification.success({
-        message: id ? "Updated" : "Created" + "Successfully",
+        message: id ? "Updated " : "Created " + "Successfully",
       });
     },
     onError: () => {
@@ -80,7 +85,21 @@ const Home: React.FC = () => {
       });
     },
   });
-
+  const { mutate: deleteOneUser } = useMutation(deleteUser, {
+    onSuccess: () => {
+      setIsModalOpen(false);
+      setId(null);
+      refetch();
+      notification.success({
+        message: "Deleted Successfully",
+      });
+    },
+    onError: () => {
+      notification.error({
+        message: `Failed to Delete User`,
+      });
+    },
+  });
   const userColumns: any = [
     {
       title: "Id",
@@ -107,21 +126,31 @@ const Home: React.FC = () => {
       dataIndex: "",
       key: "1",
       render: (row: any) => {
-        console.log("row", row);
-
         return (
-          <Button
-            onClick={() => {
-              setId(row?.id);
-              formik.setFieldValue("email", row?.email);
-              formik.setFieldValue("password", row?.password);
-              formik.setFieldValue("firstName", row?.firstName);
-              formik.setFieldValue("lastName", row?.lastName);
-              setIsModalOpen(true);
-            }}
-          >
-            Edit
-          </Button>
+          <>
+            <Button
+              onClick={() => {
+                setId(row?.id);
+                formik.setFieldValue("email", row?.email);
+                formik.setFieldValue("password", row?.password);
+                formik.setFieldValue("firstName", row?.firstName);
+                formik.setFieldValue("lastName", row?.lastName);
+                setIsModalOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            {/* <Popconfirm
+              title={"Deleting.Is that OK?"}
+              onConfirm={() => deleteOneUser(row?.id)}
+              okText={"OK"}
+              cancelText={"Cancel"}
+              okButtonProps={{ size: "middle" }}
+              cancelButtonProps={{ size: "middle" }}
+            >
+              <Button shape={"round"}>Delete</Button>
+            </Popconfirm> */}
+          </>
         );
       },
     },

@@ -15,3 +15,16 @@ export const updateUser = async (id: number, data: any) => {
     data,
   });
 };
+
+export const deleteUser = async (id: any) => {
+  const user = await getUsers(id);
+  console.log("user", user);
+
+  if (user) {
+    return await prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+  }
+};
