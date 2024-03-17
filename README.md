@@ -24,17 +24,16 @@ The `pages/api` directory is mapped to `/api/*`. Files in this directory are tre
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-## Learn More
+## Running it locally
 
-To learn more about Next.js, take a look at the following resources:
+To get it up and running, first you'd need to add `.env` file. Then, you'd need to add your `DATABASE_URL` value. You can use any MySQL service (like [Cloud SQL](https://cloud.google.com/sql) or [PlanetScale](https://planetscale.com/)), or spin up a local MySQL instance. For the `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN` paste your project's DSN string. For the `NEXTAUTH_SECRET` value you can use a random string generator. The value can also contain numbers and special characters. The Sentry values aren't required to run the app, so you can skip them for now.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Once you have the environment variables set, you can proceed to install the dependencies by running `yarn install`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Then you'd need to setup your database, so follow these instructions:
 
-## Deploy on Vercel
+1. Run `npx prisma generate` to generate the Prisma client based on the schema.
+2. Run `npx prisma db push` to initialize your database branch.
+3. Run `npx prisma db seed` to add demo data so you don't have to manually create the categories and flashcards.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+When you're done with that, you can start the app locally by running `yarn run dev` and visiting [localhost:3000](http://localhost:3000).
